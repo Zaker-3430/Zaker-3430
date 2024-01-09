@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 [ -f /etc/init.d/functions ] && . /etc/init.d/functions
-
+[ -f ./shell/sysinit.sh ] && . ./shell/sysinit.sh
 ##基础变量
 DATE=`date +"%F-%T"`
 IPADDR=`hostname -I |awk '{print$1}'`
@@ -9,74 +9,6 @@ HOSTNAME=`hostname -s`
 USER=`whoami`
 
 
-#系统基础信息
-Systeminfo(){
-    # 获取系统 CPU 数量
-    cpu_logical_count=$(nproc)
-    cpu_physical_count=$(grep "physical id" /proc/cpuinfo | sort -u | wc -l)
-
-    # 获取系统内存总容量、已使用内存量
-    #mem_total=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-    mem_total=$(free -m |awk 'NR==2{print $2}')
-    mem_used=$(free -m | awk 'NR==2{print $3}')
-    mem_usage=`free -m | awk 'NR==2{printf "%.2f",$3/$2*100}'`
-
-    # 获取系统磁盘总容量、已使用磁盘空间和可用磁盘空间
-    disk_total=$(df -BG --total | awk 'END{print $2}')
-    disk_used=$(df -BG --total | awk 'END{print $3}')
-    disk_available=$(df -BG --total | awk 'END{print $4}')
-
-    # 获取系统 CPU 使用率
-    cpu_usage=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1"%"}')
-    
-    # 获取15分钟CPU平均负载
-    cpu_load=$(uptime |awk -F"," '{print $6}')
-
-    # 显示基础监控信息
-    echo "系统 CPU 数量（逻辑处理器数量）：$cpu_logical_count"
-    echo "系统 CPU 数量（物理处理器数量）：$cpu_physical_count"
-    echo "系统内存总容量：$mem_total MB"
-    echo "系统已使用内存量：$mem_used MB"
-    echo "系统内存使用率：$mem_usage %"
-    echo "系统磁盘总容量：$disk_total"
-    echo "系统已使用磁盘空间：$disk_used"
-    echo "系统可用磁盘空间：$disk_available"
-    echo "系统 CPU 使用率：$cpu_usage"
-    echo "系统15分钟 CPU 平均负载：$cpu_load"
-    menu_3
-}
-
-#CPU使用率前5进程
-Cpu_top5(){
-  echo -e "\033[35m------CPU使用率前5进程------\033[0m"
-  ps aux --sort=-%cpu | head -n 6 | awk '{printf ("%s\t%s\t%s\t%s\t%s\t%s\n",$1,$2,$3,$6/1024"MB",$9,$11)}'
-  menu_3
-}
-
-#内存使用率前5进程
-Mem_top5(){
-  echo -e "\033[34m------内存使用率前5进程------\033[0m"
-  ps aux --sort=-%mem | head -n 6 | awk '{printf ("%s\t%s\t%s\t%s\t%s\t%s\n",$1,$2,$4,$6/1024"MB",$9,$11)}'
-  menu_3
-}
-
-
-#查看指定目录占用空间大小
-Duh(){
-  read -p"请输入目录：" dir
-  du -hd 1 $dir | sort -h
-  echo "占用存储空间最大的目录或文件是："
-  du -sh $dir/* | sort -hr | head -1
-  menu_3
-}
-
-#查看指定进程信息
-Psinfo(){
-  read -p"请输入进程名或进程pid：" process
-  ps -eo pid,lstart,etime,cmd | grep $process | grep -v 'grep' | grep -v $0
-  
-
-}
 menu_1(){
 cat << EOF
 ----------------------------------------------
@@ -95,10 +27,10 @@ EOF
 read -p "please input optios[1-9]: " num1
 case $num1 in 
   1)Firewall ;;
-  2)Zh_CN ;;
-  3)Useradd ;;
+  2)zh_CN ;;
+  3)AddUser ;;
   4)Yum ;;
-  5)Lvm ;;
+  5)Auto_lvm ;;
   6)Sysctl ;;
   7)Limits ;;
   8)clear;main_menu ;;
